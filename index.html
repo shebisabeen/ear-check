@@ -4,6 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Ear Check – Earphone / Headphone Test</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f1117" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ear Check" />
+  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
   <style>
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -475,8 +484,7 @@
   </div>
 
   <footer>
-    <p>Uses the Web Audio API &nbsp;·&nbsp; Works best with headphones &nbsp;·&nbsp;
-      Inspired by <a href="https://www.audiocheck.net/audiotests_stereo.php" target="_blank" rel="noopener">audiocheck.net</a>
+    <p>&nbsp;·&nbsp;Uses the Web Audio API &nbsp;·&nbsp; Works best with headphones &nbsp;·&nbsp;
     </p>
   </footer>
 
@@ -715,7 +723,15 @@
     }
 
     function toggleChannel(id) {
-      channels[id].active ? stopChannel(id) : startChannel(id);
+      if (channels[id].active) {
+        stopChannel(id);
+      } else {
+        // Stop any other active channel first
+        Object.keys(channels).forEach(other => {
+          if (other !== id && channels[other].active) stopChannel(other);
+        });
+        startChannel(id);
+      }
     }
 
     function stopAll() {
@@ -796,6 +812,17 @@
         canvas.height = canvas.offsetHeight;
       });
     });
+
+    /* ─────────────────────────────────────────────
+       Service Worker Registration
+    ───────────────────────────────────────────── */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('[SW] Registered:', reg.scope))
+          .catch(err => console.warn('[SW] Registration failed:', err));
+      });
+    }
   </script>
 </body>
 </html>
