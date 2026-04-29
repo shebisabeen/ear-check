@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ear Check – Earphone / Headphone Test</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3350;
+      --accent-l:  #3b82f6;   /* blue  – left  */
+      --accent-c:  #a855f7;   /* purple – center */
+      --accent-r:  #22c55e;   /* green – right  */
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --radius:    16px;
+      --transition: 0.25s ease;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 4rem;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header .logo {
+      font-size: 3rem;
+      margin-bottom: 0.25rem;
+      filter: drop-shadow(0 0 12px rgba(168,85,247,0.5));
+    }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent-l), var(--accent-c), var(--accent-r));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header p {
+      color: var(--muted);
+      margin-top: 0.4rem;
+      font-size: 0.95rem;
+    }
+
+    /* ── Instructions ── */
+    .instructions {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      max-width: 680px;
+      width: 100%;
+      margin-bottom: 2rem;
+      font-size: 0.9rem;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+    .instructions strong { color: var(--text); }
+    .instructions ol { padding-left: 1.2rem; margin-top: 0.5rem; }
+    .instructions li { margin-bottom: 0.25rem; }
+
+    /* ── Cards Grid ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      max-width: 780px;
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+
+    /* ── Individual Card ── */
+    .card {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity var(--transition);
+      pointer-events: none;
+    }
+
+    /* Glow colours per card */
+    .card.left  { --accent: var(--accent-l); }
+    .card.center{ --accent: var(--accent-c); }
+    .card.right { --accent: var(--accent-r); }
+
+    .card.left::before  { background: radial-gradient(ellipse at top, rgba(59,130,246,0.12) 0%, transparent 70%); }
+    .card.center::before{ background: radial-gradient(ellipse at top, rgba(168,85,247,0.12) 0%, transparent 70%); }
+    .card.right::before { background: radial-gradient(ellipse at top, rgba(34,197,94,0.12) 0%, transparent 70%); }
+
+    .card.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px -4px var(--accent);
+    }
+    .card.active::before { opacity: 1; }
+
+    /* ── Ear Icon ── */
+    .ear-wrap {
+      position: relative;
+      width: 80px;
+      height: 80px;
+    }
+    .ear-icon {
+      font-size: 3.5rem;
+      line-height: 1;
+      display: block;
+      text-align: center;
+      transition: transform var(--transition);
+      filter: grayscale(0.6);
+    }
+    .card.active .ear-icon {
+      filter: grayscale(0);
+      transform: scale(1.12);
+    }
+
+    /* Ripple animation when active */
+    .ripple {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      opacity: 0;
+      transform: scale(0.6);
+      pointer-events: none;
+    }
+    .card.active .ripple {
+      animation: ripple-out 1.4s ease-out infinite;
+    }
+    @keyframes ripple-out {
+      0%   { opacity: 0.7; transform: scale(0.6); }
+      100% { opacity: 0;   transform: scale(1.6); }
+    }
+
+    /* ── Label ── */
+    .card-label {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+    }
+    .card-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Frequency Selector ── */
+    .freq-wrap {
+      width: 100%;
+    }
+    .freq-wrap label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 0.3rem;
+      text-align: center;
+    }
+    .freq-wrap select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.4rem 0.6rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .freq-wrap select:focus { border-color: var(--accent); }
+
+    /* ── Volume Slider ── */
+    .vol-wrap {
+      width: 100%;
+    }
+    .vol-wrap label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.3rem;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--surface2);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    /* ── Play Button ── */
+    .btn {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: none;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), transform 0.1s, box-shadow var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .btn-play {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-play:hover  { filter: brightness(1.15); transform: translateY(-1px); }
+    .btn-play:active { transform: translateY(0); }
+    .btn-play.playing {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+    }
+
+    /* ── Waveform Visualiser ── */
+    .visualiser {
+      width: 100%;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--surface2);
+      overflow: hidden;
+    }
+    canvas.vis-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* ── Quick-play row ── */
+    .quick-play {
+      display: flex;
+      gap: 1rem;
+      max-width: 780px;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .quick-play .qbtn {
+      flex: 1;
+      font-size: 1.05rem;
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+    }
+    .quick-play .qbtn.left   { --accent: var(--accent-l); background: var(--accent-l); }
+    .quick-play .qbtn.center { --accent: var(--accent-c); background: var(--accent-c); }
+    .quick-play .qbtn.right  { --accent: var(--accent-r); background: var(--accent-r); }
+    .quick-play .qbtn.playing {
+      background: transparent;
+      border: 2px solid var(--accent);
+      color: var(--accent);
+    }
+    @media (max-width: 600px) {
+      /* Keep quick-play as a single row on mobile */
+      .quick-play {
+        flex-direction: row;
+        gap: 0.5rem;
+      }
+      .quick-play .qbtn {
+        font-size: 0.9rem;
+        padding: 0.75rem 0.4rem;
+      }
+    }
+
+    /* ── Global Stop ── */
+    .global-stop {
+      margin-top: 2rem;
+      max-width: 780px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-stop-all {
+      background: transparent;
+      border: 2px solid #ef4444;
+      color: #ef4444;
+      border-radius: 10px;
+      padding: 0.65rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-stop-all:hover { background: #ef4444; color: #fff; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+    footer a { color: var(--muted); text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="logo">🎧</div>
+    <h1>Ear Check</h1>
+    <p>Test your earphones &amp; headphones – left, right &amp; center channels</p>
+  </header>
+
+  <!-- Quick-play row: immediately visible below header -->
+  <div class="quick-play">
+    <button class="btn btn-play qbtn left"   id="qbtn-left"   onclick="toggleChannel('left')">
+      <span>▶</span> Left
+    </button>
+    <button class="btn btn-play qbtn center" id="qbtn-center" onclick="toggleChannel('center')">
+      <span>▶</span> Center
+    </button>
+    <button class="btn btn-play qbtn right"  id="qbtn-right"  onclick="toggleChannel('right')">
+      <span>▶</span> Right
+    </button>
+  </div>
+
+  <!-- Instructions -->
+  <div class="instructions">
+    <strong>How to use:</strong>
+    <ol>
+      <li>Put on your earphones or headphones.</li>
+      <li>Click <strong>Left</strong>, <strong>Center</strong> or <strong>Right</strong> above to test that channel instantly.</li>
+      <li>You should hear the sound <em>only</em> in the indicated ear (or both for Center).</li>
+      <li>If you hear sound in the wrong ear, your left/right channels may be swapped.</li>
+      <li>Scroll down to adjust the sound type and volume per channel.</li>
+    </ol>
+  </div>
+
+  <!-- Cards -->
+  <div class="cards">
+
+    <!-- LEFT -->
+    <div class="card left" id="card-left">
+      <div class="ear-wrap">
+        <span class="ear-icon">👂</span>
+        <div class="ripple"></div>
+      </div>
+      <div class="card-label">LEFT</div>
+      <div class="card-desc">Sound plays only in<br>your <strong>left</strong> ear</div>
+      <button class="btn btn-play" id="btn-left" onclick="toggleChannel('left')">
+        <span class="btn-icon">▶</span> Play Left
+      </button>
+      <div class="freq-wrap">
+        <label>Sound</label>
+        <select id="freq-left">
+          <option value="ting">🔔 Ting (Bell)</option>
+          <option value="chirp">🐦 Bird Chirp</option>
+          <option value="bottle">🍶 Bottle Blow</option>
+          <option value="drop">💧 Water Drop</option>
+          <option value="chime" selected>🎐 Wind Chime</option>
+          <option value="pluck">🎸 Pluck</option>
+        </select>
+      </div>
+      <div class="vol-wrap">
+        <label><span>Volume</span><span id="vol-left-val">70%</span></label>
+        <input type="range" id="vol-left" min="0" max="100" value="70" />
+      </div>
+      <div class="visualiser"><canvas class="vis-canvas" id="vis-left"></canvas></div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="card center" id="card-center">
+      <div class="ear-wrap">
+        <span class="ear-icon">🎧</span>
+        <div class="ripple"></div>
+      </div>
+      <div class="card-label">CENTER</div>
+      <div class="card-desc">Sound plays in<br><strong>both</strong> ears equally</div>
+      <button class="btn btn-play" id="btn-center" onclick="toggleChannel('center')">
+        <span class="btn-icon">▶</span> Play Center
+      </button>
+      <div class="freq-wrap">
+        <label>Sound</label>
+        <select id="freq-center">
+          <option value="ting">🔔 Ting (Bell)</option>
+          <option value="chirp">🐦 Bird Chirp</option>
+          <option value="bottle">🍶 Bottle Blow</option>
+          <option value="drop">💧 Water Drop</option>
+          <option value="chime" selected>🎐 Wind Chime</option>
+          <option value="pluck">🎸 Pluck</option>
+        </select>
+      </div>
+      <div class="vol-wrap">
+        <label><span>Volume</span><span id="vol-center-val">70%</span></label>
+        <input type="range" id="vol-center" min="0" max="100" value="70" />
+      </div>
+      <div class="visualiser"><canvas class="vis-canvas" id="vis-center"></canvas></div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="card right" id="card-right">
+      <div class="ear-wrap">
+        <span class="ear-icon">👂</span>
+        <div class="ripple"></div>
+      </div>
+      <div class="card-label">RIGHT</div>
+      <div class="card-desc">Sound plays only in<br>your <strong>right</strong> ear</div>
+      <button class="btn btn-play" id="btn-right" onclick="toggleChannel('right')">
+        <span class="btn-icon">▶</span> Play Right
+      </button>
+      <div class="freq-wrap">
+        <label>Sound</label>
+        <select id="freq-right">
+          <option value="ting">🔔 Ting (Bell)</option>
+          <option value="chirp">🐦 Bird Chirp</option>
+          <option value="bottle">🍶 Bottle Blow</option>
+          <option value="drop">💧 Water Drop</option>
+          <option value="chime" selected>🎐 Wind Chime</option>
+          <option value="pluck">🎸 Pluck</option>
+        </select>
+      </div>
+      <div class="vol-wrap">
+        <label><span>Volume</span><span id="vol-right-val">70%</span></label>
+        <input type="range" id="vol-right" min="0" max="100" value="70" />
+      </div>
+      <div class="visualiser"><canvas class="vis-canvas" id="vis-right"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- Global Stop -->
+  <div class="global-stop">
+    <button class="btn-stop-all" onclick="stopAll()">⏹ Stop All</button>
+  </div>
+
+  <footer>
+    <p>Uses the Web Audio API &nbsp;·&nbsp; Works best with headphones &nbsp;·&nbsp;
+      Inspired by <a href="https://www.audiocheck.net/audiotests_stereo.php" target="_blank" rel="noopener">audiocheck.net</a>
+    </p>
+  </footer>
+
+  <script>
+    /* ─────────────────────────────────────────────
+       Audio Engine  –  Percussive / tonal sounds
+    ───────────────────────────────────────────── */
+    let audioCtx = null;
+
+    // Per-channel state: active flag, gain node, analyser, animation id, repeat timer
+    const channels = {
+      left:   { pan: -1, active: false, gainNode: null, analyser: null, animId: null, timer: null },
+      center: { pan:  0, active: false, gainNode: null, analyser: null, animId: null, timer: null },
+      right:  { pan:  1, active: false, gainNode: null, analyser: null, animId: null, timer: null },
+    };
+
+    function getAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    /* ─────────────────────────────────────────────
+       Synthesise one sound event, routed to destNode
+    ───────────────────────────────────────────── */
+    function playSoundEvent(ctx, type, destNode) {
+      const now = ctx.currentTime;
+
+      switch (type) {
+
+        /* 🔔 Ting – pure sine bell, long ring */
+        case 'ting': {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = 880;
+          g.gain.setValueAtTime(0.001, now);
+          g.gain.exponentialRampToValueAtTime(0.55, now + 0.005);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 2.2);
+          osc.connect(g); g.connect(destNode);
+          osc.start(now); osc.stop(now + 2.5);
+          break;
+        }
+
+        /* 🐦 Bird Chirp – frequency sweep up then down */
+        case 'chirp': {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1200, now);
+          osc.frequency.exponentialRampToValueAtTime(3200, now + 0.12);
+          osc.frequency.exponentialRampToValueAtTime(2400, now + 0.22);
+          g.gain.setValueAtTime(0.001, now);
+          g.gain.linearRampToValueAtTime(0.4, now + 0.04);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc.connect(g); g.connect(destNode);
+          osc.start(now); osc.stop(now + 0.35);
+          break;
+        }
+
+        /* 🍶 Bottle Blow – narrow bandpass noise burst */
+        case 'bottle': {
+          const sz  = Math.round(ctx.sampleRate * 0.6);
+          const buf = ctx.createBuffer(1, sz, ctx.sampleRate);
+          const d   = buf.getChannelData(0);
+          for (let i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
+          const src = ctx.createBufferSource();
+          src.buffer = buf;
+          const bp  = ctx.createBiquadFilter();
+          bp.type = 'bandpass'; bp.frequency.value = 520; bp.Q.value = 18;
+          const g   = ctx.createGain();
+          g.gain.setValueAtTime(0.001, now);
+          g.gain.linearRampToValueAtTime(0.7, now + 0.06);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+          src.connect(bp); bp.connect(g); g.connect(destNode);
+          src.start(now); src.stop(now + 0.65);
+          break;
+        }
+
+        /* 💧 Water Drop – descending pitch blip */
+        case 'drop': {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(1400, now);
+          osc.frequency.exponentialRampToValueAtTime(400, now + 0.18);
+          g.gain.setValueAtTime(0.001, now);
+          g.gain.linearRampToValueAtTime(0.5, now + 0.01);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc.connect(g); g.connect(destNode);
+          osc.start(now); osc.stop(now + 0.28);
+          break;
+        }
+
+        /* 🎐 Wind Chime – three staggered bell tones */
+        case 'chime': {
+          [523, 659, 784].forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const g   = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = f;
+            const t0 = now + i * 0.08;
+            g.gain.setValueAtTime(0.001, t0);
+            g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.005);
+            g.gain.exponentialRampToValueAtTime(0.001, t0 + 1.8);
+            osc.connect(g); g.connect(destNode);
+            osc.start(t0); osc.stop(t0 + 2.0);
+          });
+          break;
+        }
+
+        /* 🎸 Pluck – Karplus-Strong style */
+        case 'pluck':
+        default: {
+          const freq = 220 * Math.pow(2, Math.floor(Math.random() * 5) / 12);
+          const sz   = Math.round(ctx.sampleRate / freq);
+          const buf  = ctx.createBuffer(1, sz, ctx.sampleRate);
+          const d    = buf.getChannelData(0);
+          for (let i = 0; i < sz; i++) d[i] = Math.random() * 2 - 1;
+          const src  = ctx.createBufferSource();
+          src.buffer = buf; src.loop = true;
+          const lp   = ctx.createBiquadFilter();
+          lp.type = 'lowpass'; lp.frequency.value = 3000;
+          const g    = ctx.createGain();
+          g.gain.setValueAtTime(0.5, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 1.4);
+          src.connect(lp); lp.connect(g); g.connect(destNode);
+          src.start(now); src.stop(now + 1.5);
+          break;
+        }
+      }
+    }
+
+    /* ── Repeat interval with jitter ── */
+    function repeatInterval(type) {
+      const base = { ting: 3000, chirp: 2200, bottle: 2800, drop: 1800, chime: 3500, pluck: 2000 };
+      const b = base[type] || 2500;
+      return b + Math.random() * b * 0.4;
+    }
+
+    /* ─────────────────────────────────────────────
+       Channel start / stop / toggle
+    ───────────────────────────────────────────── */
+    function startChannel(id) {
+      const ch = channels[id];
+      if (ch.active) return;
+
+      const ctx  = getAudioCtx();
+      const type = document.getElementById('freq-' + id).value;
+      const vol  = parseInt(document.getElementById('vol-' + id).value) / 100;
+
+      // Output gain (user volume)
+      const gain = ctx.createGain();
+      gain.gain.value = vol;
+
+      // Stereo panner
+      const panner = ctx.createStereoPanner();
+      panner.pan.value = ch.pan;
+
+      // Analyser for visualiser
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 256;
+
+      // Chain: gain → panner → analyser → destination
+      gain.connect(panner);
+      panner.connect(analyser);
+      analyser.connect(ctx.destination);
+
+      ch.active   = true;
+      ch.gainNode = gain;
+      ch.analyser = analyser;
+
+      // Play first event immediately, then schedule repeats
+      playSoundEvent(ctx, type, gain);
+
+      function scheduleNext() {
+        ch.timer = setTimeout(() => {
+          if (!ch.active) return;
+          playSoundEvent(ctx, type, gain);
+          scheduleNext();
+        }, repeatInterval(type));
+      }
+      scheduleNext();
+
+      // UI – card button
+      document.getElementById('card-' + id).classList.add('active');
+      const btn = document.getElementById('btn-' + id);
+      btn.classList.add('playing');
+      btn.innerHTML = '<span class="btn-icon">⏹</span> Stop ' + id.charAt(0).toUpperCase() + id.slice(1);
+
+      // UI – quick-play button
+      const qbtn = document.getElementById('qbtn-' + id);
+      qbtn.classList.add('playing');
+      qbtn.innerHTML = '<span>⏹</span> Stop';
+
+      drawVisualiser(id);
+    }
+
+    function stopChannel(id) {
+      const ch = channels[id];
+      if (!ch.active) return;
+
+      ch.active = false;
+
+      // Cancel repeat timer
+      if (ch.timer) { clearTimeout(ch.timer); ch.timer = null; }
+
+      // Fade out gain to avoid click, then disconnect
+      if (ch.gainNode) {
+        const g = ch.gainNode;
+        const t = audioCtx.currentTime;
+        g.gain.setTargetAtTime(0, t, 0.05);
+        setTimeout(() => { try { g.disconnect(); } catch(e) {} }, 300);
+        ch.gainNode = null;
+      }
+
+      if (ch.analyser) { try { ch.analyser.disconnect(); } catch(e) {} ch.analyser = null; }
+      if (ch.animId)   { cancelAnimationFrame(ch.animId); ch.animId = null; }
+
+      // Clear canvas
+      const canvas = document.getElementById('vis-' + id);
+      const c2d    = canvas.getContext('2d');
+      c2d.clearRect(0, 0, canvas.width, canvas.height);
+
+      // UI – card button
+      document.getElementById('card-' + id).classList.remove('active');
+      const btn = document.getElementById('btn-' + id);
+      btn.classList.remove('playing');
+      const labels = { left: 'Left', center: 'Center', right: 'Right' };
+      btn.innerHTML = '<span class="btn-icon">▶</span> Play ' + labels[id];
+
+      // UI – quick-play button
+      const qbtn = document.getElementById('qbtn-' + id);
+      qbtn.classList.remove('playing');
+      qbtn.innerHTML = '<span>▶</span> ' + labels[id];
+    }
+
+    function toggleChannel(id) {
+      channels[id].active ? stopChannel(id) : startChannel(id);
+    }
+
+    function stopAll() {
+      Object.keys(channels).forEach(stopChannel);
+    }
+
+    /* ─────────────────────────────────────────────
+       Volume sliders & sound-type selector
+    ───────────────────────────────────────────── */
+    ['left', 'center', 'right'].forEach(id => {
+      const slider = document.getElementById('vol-' + id);
+      const label  = document.getElementById('vol-' + id + '-val');
+
+      slider.addEventListener('input', () => {
+        label.textContent = slider.value + '%';
+        const ch = channels[id];
+        if (ch.gainNode) {
+          ch.gainNode.gain.setTargetAtTime(
+            parseInt(slider.value) / 100,
+            audioCtx.currentTime,
+            0.05
+          );
+        }
+      });
+
+      document.getElementById('freq-' + id).addEventListener('change', () => {
+        if (channels[id].active) { stopChannel(id); startChannel(id); }
+      });
+    });
+
+    /* ─────────────────────────────────────────────
+       Waveform Visualiser
+    ───────────────────────────────────────────── */
+    const accentColors = { left: '#3b82f6', center: '#a855f7', right: '#22c55e' };
+
+    function drawVisualiser(id) {
+      const ch     = channels[id];
+      const canvas = document.getElementById('vis-' + id);
+      const c2d    = canvas.getContext('2d');
+
+      canvas.width  = canvas.offsetWidth  || 200;
+      canvas.height = canvas.offsetHeight || 48;
+
+      const bufLen  = ch.analyser.frequencyBinCount;
+      const dataArr = new Uint8Array(bufLen);
+
+      function draw() {
+        if (!ch.analyser) return;
+        ch.animId = requestAnimationFrame(draw);
+        ch.analyser.getByteTimeDomainData(dataArr);
+
+        const W = canvas.width, H = canvas.height;
+        c2d.clearRect(0, 0, W, H);
+        c2d.fillStyle = '#22263a';
+        c2d.fillRect(0, 0, W, H);
+
+        c2d.lineWidth   = 2;
+        c2d.strokeStyle = accentColors[id];
+        c2d.beginPath();
+
+        const sliceW = W / bufLen;
+        let x = 0;
+        for (let i = 0; i < bufLen; i++) {
+          const y = (dataArr[i] / 128.0) * H / 2;
+          i === 0 ? c2d.moveTo(x, y) : c2d.lineTo(x, y);
+          x += sliceW;
+        }
+        c2d.lineTo(W, H / 2);
+        c2d.stroke();
+      }
+      draw();
+    }
+
+    window.addEventListener('resize', () => {
+      ['left', 'center', 'right'].forEach(id => {
+        const canvas = document.getElementById('vis-' + id);
+        canvas.width  = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      });
+    });
+  </script>
+</body>
+</html>
